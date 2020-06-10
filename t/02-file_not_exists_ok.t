@@ -8,15 +8,13 @@ use Test2::API qw/intercept/;
 use File::Temp;
 use Test2::Tools::File;
 
-use Carp;
-
 my ($fh,$handy_file) = File::Temp::tempfile;
 close $fh;
 
 my $events = intercept {
     file_not_exists_ok $handy_file;
     unlink $handy_file if -e $handy_file;
-    croak "a file that should not exist still exists." if -e $handy_file;
+    bail_out("A file that should not exist still exists.") if -e $handy_file;
     file_not_exists_ok $handy_file;
 };
 
