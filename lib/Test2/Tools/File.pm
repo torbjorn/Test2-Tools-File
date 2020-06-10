@@ -69,7 +69,19 @@ sub file_empty_ok {
 
 sub file_not_empty_ok {
     my($filename,$name,@diag) = @_;
+    $name //= "$filename is not empty";
 
+    my $ctx = context();
+
+    if (not -e $filename) {
+        $ctx->diag("File [$filename] tested for being empty, but it does not exist");
+        return $ctx->fail_and_release($name,@diag);
+    }
+
+    return $ctx->pass_and_release($name) if not -z $filename;
+
+    @diag=("File [$filename] exists with zero size!");
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
