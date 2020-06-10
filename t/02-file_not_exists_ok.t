@@ -14,14 +14,14 @@ my ($fh,$handy_file) = File::Temp::tempfile;
 close $fh;
 
 my $events = intercept {
-    file_exists_ok $handy_file;
+    file_not_exists_ok $handy_file;
     unlink $handy_file if -e $handy_file;
     croak "a file that should not exist still exists." if -e $handy_file;
-    file_exists_ok $handy_file;
+    file_not_exists_ok $handy_file;
 };
 
-is @$events, 2, "file_exists_ok: 2 events produced";
-ok  $events->[0]->facet_data->{assert}{pass}, "first is a pass";
-ok !$events->[1]->facet_data->{assert}{pass}, "second is a fail";
+is @$events, 2, "file_not_exists_ok: 2 results produced";
+ok !$events->[0]->facet_data->{assert}{pass}, "first is now a fail";
+ok  $events->[1]->facet_data->{assert}{pass}, "second is a pass";
 
 done_testing;

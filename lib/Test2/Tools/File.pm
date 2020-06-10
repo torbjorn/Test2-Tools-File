@@ -40,9 +40,21 @@ sub file_exists_ok($;$@) {
 }
 
 sub file_not_exists_ok{
+
+    my($filename,$name,@diag) = @_;
+    $name //= "$filename doesn't exist";
+
+    my $ctx = context();
+
+    return $ctx->pass_and_release($name) if not -e $filename;
+    return $ctx->fail_and_release($name,@diag);
+
 }
 
 sub file_empty_ok{
+
+
+
 }
 
 sub file_not_empty_ok{
