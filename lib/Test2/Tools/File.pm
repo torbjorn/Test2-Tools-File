@@ -50,7 +50,7 @@ sub file_not_exists_ok($;$@) {
 
 }
 
-sub file_empty_ok {
+sub file_empty_ok($;$@) {
 
     my($filename,$name,@diag) = @_;
     $name //= "$filename is empty";
@@ -67,7 +67,7 @@ sub file_empty_ok {
 
 }
 
-sub file_not_empty_ok {
+sub file_not_empty_ok($;$@) {
     my($filename,$name,@diag) = @_;
     $name //= "$filename is not empty";
 
@@ -85,229 +85,241 @@ sub file_not_empty_ok {
 
 }
 
-sub file_size_ok {
+sub file_size_ok($$;$@) {
+    my($filename,$expected,$name,@diag) = @_;
+
+    $expected = int $expected;
+    $name //= "$filename has right size";
+
+    my $ctx = context();
+
+    if (not -e $filename) {
+        $ctx->diag("File [$filename] does not exist");
+        return $ctx->fail_and_release($name,@diag);
+    }
+
+    return $ctx->pass_and_release($name) if -s $filename == $expected;
+    return $ctx->fail_and_release($name,@diag);
+
+}
+
+sub file_max_size_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_max_size_ok {
+sub file_min_size_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_min_size_ok {
+sub file_readable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_readable_ok {
+sub file_not_readable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_not_readable_ok {
+sub file_writeable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_writeable_ok {
+sub file_not_writeable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_not_writeable_ok {
+sub file_executable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_executable_ok {
+sub file_not_executable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_not_executable_ok {
+sub file_mode_is($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_mode_is {
+sub file_mode_isnt($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_mode_isnt {
+sub file_mode_has($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_mode_has {
+sub file_mode_hasnt($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_mode_hasnt {
+sub file_is_symlink_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_is_symlink_ok {
+sub symlink_target_exists_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub symlink_target_exists_ok {
+sub symlink_target_is($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub symlink_target_is {
+sub symlink_target_dangles_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub symlink_target_dangles_ok {
+sub dir_exists_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub dir_exists_ok {
+sub dir_contains_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub dir_contains_ok {
+sub link_count_is_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub link_count_is_ok {
+sub link_count_gt_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub link_count_gt_ok {
+sub link_count_lt_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub link_count_lt_ok {
+sub owner_is($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub owner_is {
+sub owner_isnt($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub owner_isnt {
+sub group_is($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub group_is {
+sub group_isnt($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub group_isnt {
+sub file_line_count_is($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_line_count_is {
+sub file_line_count_isnt($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_line_count_isnt {
+sub file_line_count_between($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_line_count_between {
+sub file_contains_like($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_contains_like {
+sub file_contains_unlike($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_contains_unlike {
+sub file_contains_utf8_like($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_contains_utf8_like {
+sub file_contains_utf8_unlike($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_contains_utf8_unlike {
+sub file_contains_encoded_like($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_contains_encoded_like {
+sub file_contains_encoded_unlike($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_contains_encoded_unlike {
+sub file_mtime_gt_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_mtime_gt_ok {
+sub file_mtime_lt_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 
 }
 
-sub file_mtime_lt_ok {
-    my($filename,$name,@diag) = @_;
-
-
-}
-
-sub file_mtime_age_ok {
+sub file_mtime_age_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
 

@@ -8,6 +8,8 @@ use Test2::API qw/intercept/;
 use File::Temp;
 use Test2::Tools::File;
 
+require "t/testutils.pl";
+
 my ($fh,$handy_file) = File::Temp::tempfile;
 
 my $events = intercept {
@@ -22,10 +24,6 @@ my $events = intercept {
     file_not_empty_ok $handy_file;
 };
 
-is @$events, 4, "file_not_empty_ok: 3 events produced";
-ok !$events->[0]->facet_data->{assert}{pass}, "first is a fail";
-ok  $events->[1]->facet_data->{assert}{pass}, "second is a pass";
-is  $events->[2]->facet_data->{info}[0]{tag}, "DIAG", "third is a diagnostic on missing file";
-ok !$events->[3]->facet_data->{assert}{pass}, "fourth is a fail due to missing file";
+like $events, t2_events(qw(Fail Pass Diag Fail)), "file_not_empty_ok: events";
 
 done_testing;
