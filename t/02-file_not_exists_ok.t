@@ -8,7 +8,7 @@ use Test2::API qw/intercept/;
 use File::Temp;
 use Test2::Tools::File;
 
-require "t/testutils.pl";
+require "./t/testutils.pl";
 
 my ($fh,$handy_file) = File::Temp::tempfile;
 close $fh;
