@@ -30,6 +30,7 @@ our @EXPORT = qw/ file_exists_ok file_not_exists_ok file_empty_ok
 sub file_exists_ok($;$@) {
 
     my($filename,$name,@diag) = @_;
+    $filename = _normalize($filename);
     $name //= "$filename exists";
 
     my $ctx = context();
@@ -44,6 +45,7 @@ sub file_exists_ok($;$@) {
 sub file_not_exists_ok($;$@) {
 
     my($filename,$name,@diag) = @_;
+    $filename = _normalize($filename);
     $name //= "$filename doesn't exist";
 
     my $ctx = context();
@@ -58,6 +60,7 @@ sub file_not_exists_ok($;$@) {
 sub file_empty_ok($;$@) {
 
     my($filename,$name,@diag) = @_;
+    $filename = _normalize($filename);
     $name //= "$filename is empty";
 
     my $ctx = context();
@@ -75,6 +78,7 @@ sub file_empty_ok($;$@) {
 
 sub file_not_empty_ok($;$@) {
     my($filename,$name,@diag) = @_;
+    $filename = _normalize($filename);
     $name //= "$filename is not empty";
 
     @diag = ("File [$filename] exists with zero size!") unless @diag;
@@ -92,7 +96,7 @@ sub file_not_empty_ok($;$@) {
 
 sub file_size_ok($$;$@) {
     my($filename,$expected,$name,@diag) = @_;
-
+    $filename = _normalize($filename);
     $expected = int $expected;
     $name //= "$filename has right size";
 
@@ -112,7 +116,7 @@ sub file_size_ok($$;$@) {
 
 sub file_max_size_ok($;$@) {
     my($filename,$max,$name,@diag) = @_;
-
+    $filename = _normalize($filename);
     $max = int $max;
     $name //= "$filename is under $max bytes";
 
@@ -132,7 +136,7 @@ sub file_max_size_ok($;$@) {
 
 sub file_min_size_ok($;$@) {
     my($filename,$min,$name,@diag) = @_;
-
+    $filename = _normalize($filename);
     $min = int $min;
     $name //= "$filename is over $min bytes";
 
@@ -152,7 +156,7 @@ sub file_min_size_ok($;$@) {
 
 sub file_readable_ok($;$@) {
     my($filename,$name,@diag) = @_;
-
+    $filename = _normalize($filename);
     $name //= "$filename is readable";
 
     my $ctx = context();
@@ -166,7 +170,7 @@ sub file_readable_ok($;$@) {
 
 sub file_not_readable_ok($;$@) {
     my($filename,$name,@diag) = @_;
-
+    $filename = _normalize($filename);
     $name //= "$filename is not readable";
 
     my $ctx = context();
@@ -180,7 +184,7 @@ sub file_not_readable_ok($;$@) {
 
 sub file_writeable_ok($;$@) {
     my($filename,$name,@diag) = @_;
-
+    $filename = _normalize($filename);
     $name //= "$filename is writeable";
 
     my $ctx = context();
@@ -194,7 +198,7 @@ sub file_writeable_ok($;$@) {
 
 sub file_not_writeable_ok($;$@) {
     my($filename,$name,@diag) = @_;
-
+    $filename = _normalize($filename);
     $name //= "$filename is not writeable";
 
     my $ctx = context();
@@ -208,13 +212,39 @@ sub file_not_writeable_ok($;$@) {
 
 sub file_executable_ok($;$@) {
     my($filename,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= "$filename is executable";
 
+    my $ctx = context();
+
+    if ( _win32() ) {
+        $ctx->skip( $name, "file_executable_ok doesn't work on Windows!" );
+        return $ctx->release;
+    }
+
+    @diag = ("File [$filename] is not executable!") unless @diag;
+
+    return $ctx->pass_and_release($name) if -x $filename;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_not_executable_ok($;$@) {
     my($filename,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= "$filename is not executable";
 
+    my $ctx = context();
+
+    if ( _win32() ) {
+        $ctx->skip( $name, "file_not_executable_ok doesn't work on Windows!" );
+        return $ctx->release;
+    }
+
+    @diag = ("File [$filename] is executable!") unless @diag;
+
+    return $ctx->pass_and_release($name) if not -x $filename;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 

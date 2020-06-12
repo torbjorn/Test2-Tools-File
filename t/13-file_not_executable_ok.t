@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use Test2::V0;
+use Test2::Tools::Explain;
+use Test2::Plugin::NoWarnings;
+use Test2::API qw/intercept/;
+
+use File::Temp;
+use Test2::Tools::File;
+use File::chmod;
+$File::chmod::UMASK = 0;
+
+require "./t/testutils.pl";
+
+SKIP: {
+
+    if ( Test2::Tools::File::_win32() ) {
+        skip "file_not_executable_ok doesn't work on windows";
+    }
+
+    my ($fh,$handy_file) = File::Temp::tempfile;
+    close $fh;
+
+    my $events = intercept {
+        chmod("a-x", $handy_file) or bail_out("Failed removing executable rights for tesing");
+        file_not_executable_ok $handy_file; ## PASS
+        chmod("a+x", $handy_file) or bail_out("Failed setting executable rights for tesing");
+        file_not_executable_ok $handy_file; ## FAIL
+        unlink $handy_file if -e $handy_file;
+        bail_out("A file that should not exist still exists.") if -e $handy_file;
+        ## A nonexisting file is not executable
+        file_not_executable_ok $handy_file; ## PASS
+    };
+
+    like $events, t2_events(qw(Pass Fail Pass)), "file_not_executable_ok: events";
+
+}
+
+done_testing;
