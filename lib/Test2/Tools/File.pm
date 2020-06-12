@@ -98,26 +98,71 @@ sub file_size_ok($$;$@) {
         return $ctx->fail_and_release($name,@diag);
     }
 
-    return $ctx->pass_and_release($name) if -s $filename == $expected;
+    my $actual = -s $filename;
+
+    return $ctx->pass_and_release($name) if $actual == $expected;
+
+    @diag = ("File [$filename] has actual size [$actual] not [$expected]!" );
+
     return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_max_size_ok($;$@) {
-    my($filename,$name,@diag) = @_;
+    my($filename,$max,$name,@diag) = @_;
 
+    $max = int $max;
+    $name //= "$filename is under $max bytes";
+
+    my $ctx = context();
+
+    if (not -e $filename) {
+        $ctx->diag("File [$filename] does not exist");
+        return $ctx->fail_and_release($name,@diag);
+    }
+
+    my $actual = -s $filename;
+
+    return $ctx->pass_and_release($name) if $actual <= $max;
+
+    @diag = ("File [$filename] has actual size [$actual] greater than [$max]!" );
+
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_min_size_ok($;$@) {
-    my($filename,$name,@diag) = @_;
+    my($filename,$min,$name,@diag) = @_;
 
+    $min = int $min;
+    $name //= "$filename is over $min bytes";
+
+    my $ctx = context();
+
+    if (not -e $filename) {
+        $ctx->diag("File [$filename] does not exist");
+        return $ctx->fail_and_release($name,@diag);
+    }
+
+    my $actual = -s $filename;
+
+    return $ctx->pass_and_release($name) if $actual >= $min;
+
+    @diag = ("File [$filename] has actual size [$actual] less than [$min]!" );
+
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_readable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
+    $name //= "$filename is readable";
+
+    my $ctx = context();
+
+    return $ctx->pass_and_release($name) if -r $filename;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
