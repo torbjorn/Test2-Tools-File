@@ -29,15 +29,15 @@ my $events = intercept {
     ## delete it:
     unlink $handy_file if -e $handy_file;
     bail_out("A file that should not exist still exists.") if -e $handy_file;
-    file_min_size_ok $handy_file, 0;  ## DIAG + FAIL
-    file_min_size_ok $handy_file, 3;  ## DIAG + FAIL
+    file_min_size_ok $handy_file, 0;  ## FAIL
+    file_min_size_ok $handy_file, 3;  ## FAIL
 };
 
 like(
     $events,
     t2_events(qw(
                     Pass Fail Pass Pass Pass Fail
-                    Diag Fail Diag Fail
+                    Fail Fail
             )),
     "file_min_size_ok: events"
 );

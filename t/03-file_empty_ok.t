@@ -24,6 +24,6 @@ my $events = intercept {
     file_empty_ok $handy_file;
 };
 
-like $events, t2_events(qw(Pass Fail Diag Fail)), "file_empty_ok: events";
+like $events, t2_events(qw(Pass Fail Fail)), "file_empty_ok: events";
 
 done_testing;

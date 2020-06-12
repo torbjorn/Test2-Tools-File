@@ -5,6 +5,7 @@ package Test2::Tools::File;
 use strict;
 use warnings;
 
+use File::Spec;
 use Test2::API qw/context/;
 
 use base 'Exporter';
@@ -33,6 +34,8 @@ sub file_exists_ok($;$@) {
 
     my $ctx = context();
 
+    @diag = ("File [$filename] does not exist") unless @diag;
+
     return $ctx->pass_and_release($name) if -e $filename;
     return $ctx->fail_and_release($name,@diag);
 
@@ -44,6 +47,8 @@ sub file_not_exists_ok($;$@) {
     $name //= "$filename doesn't exist";
 
     my $ctx = context();
+
+    @diag = ("File [$filename] exists") unless @diag;
 
     return $ctx->pass_and_release($name) if not -e $filename;
     return $ctx->fail_and_release($name,@diag);
@@ -57,9 +62,10 @@ sub file_empty_ok($;$@) {
 
     my $ctx = context();
 
+    @diag = ("File [$filename] exists with non-zero size!") unless @diag;
+
     if (not -e $filename) {
-        $ctx->diag("File [$filename] tested for being empty, but it does not exist");
-        return $ctx->fail_and_release($name,@diag);
+        return $ctx->fail_and_release( $name, "File [$filename] does not exist!" );
     }
 
     return $ctx->pass_and_release($name) if -z $filename;
@@ -71,16 +77,15 @@ sub file_not_empty_ok($;$@) {
     my($filename,$name,@diag) = @_;
     $name //= "$filename is not empty";
 
+    @diag = ("File [$filename] exists with zero size!") unless @diag;
+
     my $ctx = context();
 
     if (not -e $filename) {
-        $ctx->diag("File [$filename] tested for being empty, but it does not exist");
-        return $ctx->fail_and_release($name,@diag);
+        return $ctx->fail_and_release($name,"File [$filename] does not exist!");
     }
 
     return $ctx->pass_and_release($name) if not -z $filename;
-
-    @diag=("File [$filename] exists with zero size!");
     return $ctx->fail_and_release($name,@diag);
 
 }
@@ -94,16 +99,13 @@ sub file_size_ok($$;$@) {
     my $ctx = context();
 
     if (not -e $filename) {
-        $ctx->diag("File [$filename] does not exist");
-        return $ctx->fail_and_release($name,@diag);
+        return $ctx->fail_and_release($name,"File [$filename] does not exist");
     }
 
     my $actual = -s $filename;
+    @diag = ("File [$filename] has actual size [$actual] not [$expected]!") unless @diag;
 
     return $ctx->pass_and_release($name) if $actual == $expected;
-
-    @diag = ("File [$filename] has actual size [$actual] not [$expected]!" );
-
     return $ctx->fail_and_release($name,@diag);
 
 }
@@ -117,16 +119,13 @@ sub file_max_size_ok($;$@) {
     my $ctx = context();
 
     if (not -e $filename) {
-        $ctx->diag("File [$filename] does not exist");
-        return $ctx->fail_and_release($name,@diag);
+        return $ctx->fail_and_release($name,"File [$filename] does not exist");
     }
 
     my $actual = -s $filename;
+    @diag = ("File [$filename] has actual size [$actual] greater than [$max]!" ) unless @diag;
 
     return $ctx->pass_and_release($name) if $actual <= $max;
-
-    @diag = ("File [$filename] has actual size [$actual] greater than [$max]!" );
-
     return $ctx->fail_and_release($name,@diag);
 
 }
@@ -140,16 +139,13 @@ sub file_min_size_ok($;$@) {
     my $ctx = context();
 
     if (not -e $filename) {
-        $ctx->diag("File [$filename] does not exist");
-        return $ctx->fail_and_release($name,@diag);
+        return $ctx->fail_and_release($name,"File [$filename] does not exist");
     }
 
     my $actual = -s $filename;
+    @diag = ("File [$filename] has actual size [$actual] less than [$min]!" ) unless @diag;
 
     return $ctx->pass_and_release($name) if $actual >= $min;
-
-    @diag = ("File [$filename] has actual size [$actual] less than [$min]!" );
-
     return $ctx->fail_and_release($name,@diag);
 
 }
@@ -161,6 +157,8 @@ sub file_readable_ok($;$@) {
 
     my $ctx = context();
 
+    @diag = ("File [$filename] is not readable!") unless @diag;
+
     return $ctx->pass_and_release($name) if -r $filename;
     return $ctx->fail_and_release($name,@diag);
 
@@ -169,18 +167,42 @@ sub file_readable_ok($;$@) {
 sub file_not_readable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
+    $name //= "$filename is not readable";
+
+    my $ctx = context();
+
+    @diag = ("File [$filename] is readable!") unless @diag;
+
+    return $ctx->pass_and_release($name) if not -r $filename;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_writeable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
+    $name //= "$filename is writeable";
+
+    my $ctx = context();
+
+    @diag = ("File [$filename] is not writeable!") unless @diag;
+
+    return $ctx->pass_and_release($name) if -w $filename;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_not_writeable_ok($;$@) {
     my($filename,$name,@diag) = @_;
 
+    $name //= "$filename is not writeable";
+
+    my $ctx = context();
+
+    @diag = ("File [$filename] is writeable!") unless @diag;
+
+    return $ctx->pass_and_release($name) if not -w $filename;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
@@ -370,7 +392,69 @@ sub file_mtime_age_ok($;$@) {
 
 }
 
+## INTERNAL UTILS ##
 
+# These are shamelessly copied from brian d foy's Test::File.
+
+sub _normalize {
+    my $file = shift;
+    return unless defined $file;
+
+    return $file =~ m|/|
+        ? File::Spec->catfile( split m|/|, $file )
+        : $file;
+
+}
+
+sub _win32 {
+    return 0 if $^O eq 'darwin';
+    return $ENV{PRETEND_TO_BE_WIN32} if defined $ENV{PRETEND_TO_BE_WIN32};
+    return $^O =~ m/Win/;
+}
+
+# returns true if symlinks can't exist
+sub _no_symlinks_here { ! eval { symlink("",""); 1 } }
+
+# owner_is and owner_isn't should skip on OS where the question makes no
+# sense.  I really don't know a good way to test for that, so I'm going
+# to skip on the two OS's that I KNOW aren't multi-user.  I'd love to add
+# more if anyone knows of any
+#   Note:  I don't have a dos or mac os < 10 machine to test this on
+sub _obviously_non_multi_user {
+
+    foreach my $os ( qw(dos MacOS) ) {
+        return 1 if $^O eq $os;
+    }
+
+    return 0 if $^O eq 'MSWin32';
+
+    eval { my $holder = getpwuid(0) };
+    return 1 if $@;
+
+    eval { my $holder = getgrgid(0) };
+    return 1 if $@;
+
+    return 0;
+}
+
+sub _ENOFILE   () { -1 }
+sub _ECANTOPEN () { -2 }
+
+sub _file_line_counter {
+
+    my $filename = shift;
+
+    return _ENOFILE   unless -e $filename; # does not exist
+
+    return _ECANTOPEN unless open my( $fh ), "<", $filename;
+
+    my $count = 0;
+    while ( <$fh> ) {
+        $count++;
+    }
+
+    return $count;
+}
 
 1;
 
