@@ -291,14 +291,62 @@ sub file_mode_isnt($;$@) {
 }
 
 sub file_mode_has($;$@) {
-    my($filename,$name,@diag) = @_;
+    my($filename,$mode,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= sprintf("%s mode has all bits of %04o", $filename, $mode);
 
+    my $ctx = context();
+
+    if ( _win32() ) {
+        $ctx->skip( $name, "file_mode_has doesn't work on Windows!" );
+        return $ctx->release;
+    }
+
+    my $present = -e $filename;
+    my $gotmode = $present ? (stat($filename))[2] : undef;
+    my $ok      = $present && ($gotmode & $mode) == $mode;
+
+    return $ctx->pass_and_release($name) if $ok;
+
+    return $ctx->fail_and_release($name,"File [$filename] does not exist")
+        unless $present;
+
+    ## check what bits are missing
+    my $missing = ($gotmode ^ $mode) & $mode;
+    @diag = (sprintf("File [%s] mode is missing component %04o!", $filename, $missing))
+        unless @diag;
+
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_mode_hasnt($;$@) {
-    my($filename,$name,@diag) = @_;
+    my($filename,$mode,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= sprintf("%s mode has all bits of %04o", $filename, $mode);
 
+    my $ctx = context();
+
+    if ( _win32() ) {
+        $ctx->skip( $name, "file_mode_has doesn't work on Windows!" );
+        return $ctx->release;
+    }
+
+    my $present = -e $filename;
+    my $gotmode = $present ? (stat($filename))[2] : undef;
+    my $ok      = $present && ($gotmode & $mode) == 0;
+
+    return $ctx->pass_and_release($name) if $ok;
+
+    return $ctx->fail_and_release($name,"File [$filename] does not exist")
+        unless $present;
+
+    my $missing = ($gotmode ^ $mode) & $mode;
+    @diag = (sprintf("File [%s] mode is missing component %04o!", $filename, $missing))
+        unless @diag;
+
+    return $ctx->pass_and_release($name) if $ok;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
