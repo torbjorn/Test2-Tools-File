@@ -249,14 +249,44 @@ sub file_not_executable_ok($;$@) {
 }
 
 sub file_mode_is($;$@) {
-    my($filename,$name,@diag) = @_;
+    my($filename,$mode,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= sprintf("%s mode is %04o", $filename, $mode);
 
+    my $ctx = context();
+
+    if ( _win32() ) {
+        $ctx->skip( $name, "file_mode_is doesn't work on Windows!" );
+        return $ctx->release;
+    }
+
+    my $ok = -e $filename && ((stat($filename))[2] & 07777) == $mode;
+
+    @diag = (sprintf("File [%s] mode is not %04o!", $filename, $mode)) unless @diag;
+
+    return $ctx->pass_and_release($name) if $ok;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub file_mode_isnt($;$@) {
-    my($filename,$name,@diag) = @_;
+    my($filename,$mode,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= sprintf("%s mode is not %04o", $filename, $mode);
 
+    my $ctx = context();
+
+    if ( _win32() ) {
+        $ctx->skip( $name, "file_mode_isnt doesn't work on Windows!" );
+        return $ctx->release;
+    }
+
+    my $ok = not (-e $filename && ((stat($filename))[2] & 07777) == $mode);
+
+    @diag = (sprintf("File [%s] mode is %04o!", $filename, $mode)) unless @diag;
+
+    return $ctx->pass_and_release($name) if $ok;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 

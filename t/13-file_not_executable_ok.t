@@ -26,13 +26,20 @@ SKIP: {
         file_not_executable_ok $handy_file; ## PASS
         chmod("a+x", $handy_file) or bail_out("Failed setting executable rights for tesing");
         file_not_executable_ok $handy_file; ## FAIL
+
+        {
+            local $ENV{PRETEND_TO_BE_WIN32} = 1;
+            file_executable_ok $handy_file; ## SKIP
+        }
+
         unlink $handy_file if -e $handy_file;
         bail_out("A file that should not exist still exists.") if -e $handy_file;
         ## A nonexisting file is not executable
         file_not_executable_ok $handy_file; ## PASS
+
     };
 
-    like $events, t2_events(qw(Pass Fail Pass)), "file_not_executable_ok: events";
+    like $events, t2_events(qw(Pass Fail Skip Pass)), "file_not_executable_ok: events";
 
 }
 
