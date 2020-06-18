@@ -352,18 +352,60 @@ sub file_mode_hasnt($;$@) {
 
 sub file_is_symlink_ok($;$@) {
     my($filename,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= "$filename is a symlink";
 
+    my $ctx = context();
+
+    if (_no_symlinks_here()) {
+        $ctx->skip("file_is_symlink_ok doesn't work on systems without symlinks!");
+        return $ctx->release;
+    }
+
+    @diag = ("File [$filename] is not a symlink!") unless @diag;
+
+    return $ctx->pass_and_release($name) if -l $filename;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub symlink_target_exists_ok($;$@) {
-    my($filename,$name,@diag) = @_;
+    my($filename,$dest,$name,@diag) = @_;
+    $filename = _normalize($filename);
+    $name //= "$filename is a symlink with an existing target";
+    $dest //= readlink($filename);
 
+    my $ctx = context();
+
+    if (_no_symlinks_here()) {
+        $ctx->skip("symlink_target_exists_ok doesn't work on systems without symlinks!");
+        return $ctx->release;
+    }
+
+    if (not -l $filename) {
+        return $ctx->fail_and_release( $name, "File [$filename] is not a symlink!" );
+    }
+
+    if (not -e $dest) {
+        return $ctx->fail_and_release( $name, "Symlink [$filename] points to non-existent target [$dest]!" );
+    }
+
+    my $actual = readlink( $filename );
+
+    @diag = (
+        "Symlink [$filename] points to\n" .
+        "         got: $actual\n"     .
+        "    expected: $dest\n"
+    ) unless @diag;
+
+    return $ctx->pass_and_release($name) if $actual eq $dest;
+    return $ctx->fail_and_release($name,@diag);
 
 }
 
 sub symlink_target_is($;$@) {
     my($filename,$name,@diag) = @_;
+
 
 
 }
